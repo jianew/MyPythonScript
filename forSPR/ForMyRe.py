@@ -15,7 +15,8 @@ class SenPair:
     def getWER(self):
         return self.getEditDistance()/float(len(self.origin))
     def __str__(self):
-        return "origin:"+self.origin+"\n"+"reres:"+self.reres+"\n"+"wer:"+str(self.getWER())+"\n"
+        #return "原句:"+self.origin+"\n"+"识别结果:"+self.reres+"\n"+"wer:"+"%.4f"%(100*self.getWER()))+"\n"
+        return "原句:%s \n识别结果:%s \n wer: %.2f%% \n"%(self.origin,self.reres,100*self.getWER())
         
 class Analyze:
     def __init__(self,filepath):
@@ -24,7 +25,6 @@ class Analyze:
         lines=fp.readlines()
         linesnum=len(lines)
         lp=0
-        print linesnum
         while lp<linesnum:
             line=lines[lp]
             if line.find("原句")!=-1:
@@ -51,9 +51,20 @@ class Analyze:
                 lp+=1
     def __str__(self):
         return reduce(lambda x,y:str(x)+str(y),self.a_senparis)
+    def getAvaWER(self):
+        return reduce(lambda x,y:x+y,map(lambda x:x.getWER(),self.a_senparis))/len(self.a_senparis)
+    def getSER(self,thresold):
+        return len(filter(lambda x: x.getWER()>thresold,self.a_senparis))/float(len(self.a_senparis))
+    def printREPORT(self,ser_thresolf):
+        print "平均wer:% .2f%%"%self.getAvaWER()
+        print "ser:% .2f%%"%self.getSER(ser_thresolf)
+        print '\n\n'
+        for index,pair in enumerate(self.a_senparis):
+            print "%d.%s"%(index,str(pair))
 if __name__=="__main__":
-    filepath=r'/home/liuzh/workspace/test_report/log1/r1.txt'
-    print Analyze(filepath)
+    filepath1=r'/home/liuzh/workspace/test_report/log1/r1.txt'
+    ana=Analyze(filepath)
+    ana.printREPORT(0)
 
             
                 
