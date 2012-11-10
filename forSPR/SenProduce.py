@@ -165,7 +165,7 @@ class DirectGraph:
 
 
 if __name__=="__main__":
-    x=DirectGraph("我想吃*(蛋糕|饺子|NULL)")
+    x=DirectGraph("我想吃*(蛋糕|饺子|NULL)*和*(蛋糕|饺子)")
     x.parse()
     #import pdb 
     #pdb.set_trace()
