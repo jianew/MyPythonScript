@@ -1,6 +1,14 @@
 #!/usr/bin/env python
 #-*- coding:utf-8 -*-
+"""
+脚本功能用来分析语音识别结果的ser和wer,需要传入参数ser_thresold来得到ser
+"""
+
+
+import sys,getopt
 from werget import *
+
+
 def DelUnneccSymbols(sentence):
     symboltable=[':',' ',',','.',',','.',' ','\n','\r','：','，','.']
     for symbol in symboltable:
@@ -54,17 +62,44 @@ class Analyze:
     def getAvaWER(self):
         return reduce(lambda x,y:x+y,map(lambda x:x.getWER(),self.a_senparis))/len(self.a_senparis)
     def getSER(self,thresold):
+        thresold=float(thresold)
+        #for i in self.a_senparis:
+         #   print i.getWER()
+        #print filter(lambda x: x.getWER()>thresold,self.a_senparis)
         return len(filter(lambda x: x.getWER()>thresold,self.a_senparis))/float(len(self.a_senparis))
     def printREPORT(self,ser_thresolf):
-        print "平均wer:% .2f%%"%self.getAvaWER()
-        print "ser:% .2f%%"%self.getSER(ser_thresolf)
+        print "平均wer:% .2f%%"%(100*self.getAvaWER())
+        print "ser:% .2f%%"%(100*self.getSER(ser_thresolf))
         print '\n\n'
         for index,pair in enumerate(self.a_senparis):
             print "%d.%s"%(index,str(pair))
+    
+    def printREPORTinFile(self,ser_thresolf,filename):
+        fp=open(filename,'w')
+        fp.write("平均wer:% .2f%%\n"%(100*self.getAvaWER()))
+        fp.write("ser:% .2f%%\n"%(100*self.getSER(ser_thresolf)))
+        fp.write('\n\n')
+        for index,pair in enumerate(self.a_senparis):
+            fp.write("%d.%s\n"%(index,str(pair)))
+        fp.close()
 if __name__=="__main__":
-    filepath1=r'/home/liuzh/workspace/test_report/log1/r1.txt'
-    ana=Analyze(filepath)
-    ana.printREPORT(0)
+    opts,args=getopt.getopt(sys.argv[1:],"s:i:o:")
+    ser_thresold=0
+    infile=""
+    outfile=""
+    for op,value in opts:
+        if op=="-s":
+            print value
+            ser_thresold=value
+        if op=="-i":
+            print value
+            infile=value
+        if op=="-o":
+            print value
+            outfile=value
+    ana=Analyze(infile)
+    ana.printREPORT(ser_thresold)
+    ana.printREPORTinFile(ser_thresold,outfile)
 
             
                 
