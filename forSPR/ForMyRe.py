@@ -7,7 +7,7 @@
 
 import sys,getopt
 from werget import *
-
+from pylab import *
 
 def DelUnneccSymbols(sentence):
     symboltable=[':',' ',',','.',',','.',' ','\n','\r','：','，','.']
@@ -22,6 +22,13 @@ class SenPair:
         return mini_edit_distance(self.origin,self.reres,1,1,1)
     def getWER(self):
         return self.getEditDistance()/float(len(self.origin))
+    def getOLength(self):
+        return len(self.origin)
+    def __getitem__(self,key):
+        if key==0:
+            return self.origin
+        else:
+            return self.reres
     def __str__(self):
         #return "原句:"+self.origin+"\n"+"识别结果:"+self.reres+"\n"+"wer:"+"%.4f"%(100*self.getWER()))+"\n"
         return "原句:%s \n识别结果:%s \n wer: %.2f%% \n"%(self.origin,self.reres,100*self.getWER())
@@ -67,6 +74,8 @@ class Analyze:
          #   print i.getWER()
         #print filter(lambda x: x.getWER()>thresold,self.a_senparis)
         return len(filter(lambda x: x.getWER()>thresold,self.a_senparis))/float(len(self.a_senparis))
+    def getLengthWerPairs(self):
+        return map(lambda x:(x.getOLength(),x.getWER()),self.a_senparis)
     def printREPORT(self,ser_thresolf):
         print "平均wer:% .2f%%"%(100*self.getAvaWER())
         print "ser:% .2f%%"%(100*self.getSER(ser_thresolf))
@@ -82,6 +91,39 @@ class Analyze:
         for index,pair in enumerate(self.a_senparis):
             fp.write("%d.%s\n"%(index,str(pair)))
         fp.close()
+    def printSortedParisInfile(self,ser_thresolf,filename):
+        fp=open(filename,'w')
+        fp.write("平均wer:% .2f%%\n"%(100*self.getAvaWER()))
+        fp.write("ser:% .2f%%\n"%(100*self.getSER(ser_thresolf)))
+        fp.write('\n\n')
+        for index,pair in enumerate(sorted(self.a_senparis,key=lambda x:len(x[0]))):
+            fp.write("原句长度:%d\n%s\n"%(len(pair[0]),str(pair)))
+        fp.close()        
+    def plotLengthWerPairs(self,graphname):
+        paris=self.getLengthWerPairs()
+        xy=sorted(paris,key=lambda x:x[0])
+        x=[]
+        y=[]
+        sumwer=0
+        sumkeynums=0
+        keyiter=xy[0][0]
+        for key,wer in xy:
+            if key==keyiter:
+                sumwer+=wer
+                sumkeynums+=1
+            else:
+                x.append(keyiter)
+                keyiter=key
+                #print sumwer
+                #print sumkeynums
+                y.append(sumwer/sumkeynums)
+                sumwer=wer
+                sumkeynums=1         
+        scatter(x,y)
+        savefig(graphname,dpi=480)
+    
+
+
 if __name__=="__main__":
     opts,args=getopt.getopt(sys.argv[1:],"s:i:o:")
     ser_thresold=0
@@ -100,6 +142,8 @@ if __name__=="__main__":
     ana=Analyze(infile)
     ana.printREPORT(ser_thresold)
     ana.printREPORTinFile(ser_thresold,outfile)
+    ana.printSortedParisInfile(ser_thresold,outfile.replace('.txt','')+"_sorted.txt")
+    ana.plotLengthWerPairs(outfile.replace('.txt','')+".png")
 
             
                 
